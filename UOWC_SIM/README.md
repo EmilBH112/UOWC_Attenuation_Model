@@ -28,16 +28,16 @@ This repository implements an end-to-end UOWC simulation pipeline aligned with t
 pip install -r requirements.txt
 
 # List presets
-python -m uowc_sim.cli --list
+python -m UOWC_SIM.uowc_sim.cli --list
 
 # Run a preset scenario (Pure Sea, LED, Log-Normal turbulence)
-python -m uowc_sim.cli run --preset pure_sea --tx led --turb lognormal --dmin 1 --dmax 100 --step 1
+python -m UOWC_SIM.uowc_sim.cli run --preset pure_sea --tx led --turb lognormal --dmin 1 --dmax 100 --step 1
 
 # Laser source in Clear Ocean with Generalized-Gamma turbulence (shape params via CLI)
-python -m uowc_sim.cli run --preset clear_ocean --tx ld --turb gengamma --gg-alpha 1.0 --gg-beta 2.0 --gg-nu 1.0
+python -m UOWC_SIM.uowc_sim.cli run --preset clear_ocean --tx ld --turb gengamma --gg-alpha 1.0 --gg-beta 2.0 --gg-nu 1.0
 
 # Produce summary tables and save plots
-python -m uowc_sim.cli run --preset turbid_harbor --tx ld --turb weibull --wb-k 0.7 --wb-lambda 1.0 --save
+python -m UOWC_SIM.uowc_sim.cli run --preset turbid_harbor --tx ld --turb weibull --wb-k 0.7 --wb-lambda 1.0 --save
 ```
 
 Outputs (plots + CSV/JSON) are saved under `outputs/<timestamp>/` when `--save` is used.
