@@ -1,6 +1,6 @@
 # UOWC_SIM — End-to-End Underwater Optical Wireless Communication Simulation
 
-This repository implements an end-to-end UOWC simulation pipeline aligned with the two flowcharts you provided and the formulas in the research paper:
+This repository implements an end-to-end UOWC simulation pipeline aligned with the two flowcharts provided and the formulas in the research paper:
 
 - Zayed & Shokair (2025), "Modeling and simulation of optical wireless communication channels in IoUT considering water types, turbulence and transmitter selection" (Scientific Reports).
 
@@ -72,6 +72,3 @@ scripts/
 - CLI accepts Monte-Carlo count for turbulence (`--mc`) to average metrics.
 - The "protocol optimization" step is a placeholder that prints hints based on results.
 
-## License
-
-MIT.
