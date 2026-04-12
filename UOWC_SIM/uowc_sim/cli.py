@@ -1,5 +1,5 @@
 
-import argparse, os, csv, json
+import argparse, os, csv, json, math
 from datetime import datetime
 from .config import SimulationConfig, ReceiverConfig, TransmitterConfig, WaterConfig, TurbulenceConfig, NoiseConfig, SimulationGrid
 from .water import PRESETS_520NM
@@ -14,6 +14,24 @@ LED_CONFIGS = {
     "L135-U450003500000": os.path.join(CONFIGS_DIR, "L135-U450003500000_98mA.yml"),
     "L135-B475003500000": os.path.join(CONFIGS_DIR, "L135-B475003500000_98mA.yml"),
     "L135-G525003500000": os.path.join(CONFIGS_DIR, "L135-G525003500000_98mA.yml"),
+}
+
+# Hamamatsu S5973-02 built-in receiver preset.
+# Active area is modeled as a 0.4 mm diameter circle.
+# Responsivity is set to a visible-band reference value.
+# Dark current is reduced to reflect the low-noise device.
+S5973_02_AREA_M2 = math.pi * (0.2e-3 ** 2)
+RX_PRESETS = {
+    "s5973-02": {
+        "area_m2": S5973_02_AREA_M2,
+        "responsivity_A_per_W": 0.301,
+        "Idark_A": 1e-10,
+    },
+    "S5973-02": {
+        "area_m2": S5973_02_AREA_M2,
+        "responsivity_A_per_W": 0.301,
+        "Idark_A": 1e-10,
+    },
 }
 
 def _preset_to_config(name: str, tx_type: str, turb_model: str, args) -> SimulationConfig:
@@ -77,6 +95,12 @@ def _apply_overrides(cfg: SimulationConfig, args) -> SimulationConfig:
         cfg.grid.seed = args.seed
     return cfg
 
+def _apply_rx_preset(cfg: SimulationConfig, rx_name: str) -> SimulationConfig:
+    preset = RX_PRESETS[rx_name]
+    for key, value in preset.items():
+        setattr(cfg.receiver, key, value)
+    return cfg
+
 def _resolve_led_config(name: str) -> str:
     return LED_CONFIGS[name]
 
@@ -91,6 +115,11 @@ def _print_led_presets():
     print("  - blue       -> L135-B475003500000_98mA.yml")
     print("  - green      -> L135-G525003500000_98mA.yml")
     print("You can also pass the exact part number to --led.")
+
+def _print_rx_presets():
+    print("Receiver presets:")
+    print("  - s5973-02 -> Hamamatsu S5973-02")
+    print("Applies the S5973-02 active area, responsivity, and dark current.")
 
 def _save_csv_json(outdir, results):
     ts = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
@@ -114,11 +143,13 @@ def main():
 
     p.add_argument("--list", action="store_true", help="List water presets and exit")
     p.add_argument("--list-leds", action="store_true", help="List built-in LED configs and exit")
+    p.add_argument("--list-rx", action="store_true", help="List built-in receiver configs and exit")
 
     runp = sub.add_parser("run", help="Run a simulation")
     runp.add_argument("--preset", choices=list(PRESETS_520NM.keys()), default=None)
     runp.add_argument("--config", default=None, help="Path to YAML config file")
     runp.add_argument("--led", default=None, help="Built-in LED config name or exact Lumileds part number")
+    runp.add_argument("--rx", default=None, help="Built-in receiver preset name")
     runp.add_argument("--tx", choices=["led", "ld"], default=None)
     runp.add_argument("--turb", choices=["lognormal", "gengamma", "weibull"], default=None)
     runp.add_argument("--dmin", type=float, default=None)
@@ -142,7 +173,9 @@ def main():
         _print_water_presets()
     if args.list_leds:
         _print_led_presets()
-    if args.list or args.list_leds:
+    if args.list_rx:
+        _print_rx_presets()
+    if args.list or args.list_leds or args.list_rx:
         return
 
     if args.cmd == "run":
@@ -164,6 +197,12 @@ def main():
             preset_name = args.preset or "pure_sea"
             cfg = _preset_to_config(preset_name, args.tx, args.turb, args)
             source_desc = f"preset={preset_name}"
+
+        if args.rx is not None:
+            if args.rx not in RX_PRESETS:
+                p.error(f"Unknown receiver preset '{args.rx}'. Use --list-rx to see available options.")
+            cfg = _apply_rx_preset(cfg, args.rx)
+            source_desc = f"{source_desc}  rx={args.rx}"
 
         results = run_sim(cfg)
 
