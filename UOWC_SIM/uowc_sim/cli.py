@@ -228,6 +228,8 @@ def main():
                     "Received Power vs Distance", save=args.save, outname="received_power_dBm.png")
         plot_curves(results["distance_m"], results["SNR_dB"], "SNR (dB)",
                     "SNR vs Distance", save=args.save, outname="snr_dB.png")
+        plot_curves(results["distance_m"], results["V_sig_V"], "Signal Voltage at Simulated PSoC (V)",
+                    "Simulated PSoC Signal Voltage vs Distance", save=args.save, outname="psoc_signal_voltage_V.png")
         plot_curves(results["distance_m"], results["BER"], "BER",
                     "BER vs Distance", save=args.save, outname="ber.png")
 
