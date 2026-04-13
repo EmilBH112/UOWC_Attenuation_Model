@@ -16,6 +16,9 @@ class ReceiverConfig:
     bandwidth_Hz: float = 1e6
     tia_gain: float = 1.0
     baseline_offset_V: float = 0.0
+    comparator_low_V: float = 0.0
+    comparator_high_V: float = 3.3
+    psoc_logic_high_threshold_V: float = 1.65
 
 @dataclass
 class TransmitterConfig:

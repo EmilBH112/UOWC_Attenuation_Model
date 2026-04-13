@@ -24,6 +24,9 @@ RX_PRESETS = {
         "Idark_A": 1e-10,
         "tia_gain": 11.3,
         "baseline_offset_V": 0.0,
+        "comparator_low_V": 0.0,
+        "comparator_high_V": 3.3,
+        "psoc_logic_high_threshold_V": 1.65,
     },
     "S5973-02": {
         "area_m2": S5973_02_AREA_M2,
@@ -31,6 +34,9 @@ RX_PRESETS = {
         "Idark_A": 1e-10,
         "tia_gain": 11.3,
         "baseline_offset_V": 0.0,
+        "comparator_low_V": 0.0,
+        "comparator_high_V": 3.3,
+        "psoc_logic_high_threshold_V": 1.65,
     },
 }
 
@@ -97,6 +103,12 @@ def _apply_overrides(cfg: SimulationConfig, args) -> SimulationConfig:
         cfg.receiver.tia_gain = args.tia_gain
     if args.baseline_offset is not None:
         cfg.receiver.baseline_offset_V = args.baseline_offset
+    if args.comparator_low is not None:
+        cfg.receiver.comparator_low_V = args.comparator_low
+    if args.comparator_high is not None:
+        cfg.receiver.comparator_high_V = args.comparator_high
+    if args.logic_high_threshold is not None:
+        cfg.receiver.psoc_logic_high_threshold_V = args.logic_high_threshold
     return cfg
 
 def _apply_rx_preset(cfg: SimulationConfig, rx_name: str) -> SimulationConfig:
@@ -122,8 +134,8 @@ def _print_led_presets():
 
 def _print_rx_presets():
     print("Receiver presets:")
-    print("  - s5973-02 -> Hamamatsu S5973-02 with tia_gain=11.3 and baseline_offset_V=0.0")
-    print("Applies the S5973-02 active area, responsivity, dark current, TIA gain, and comparator baseline offset.")
+    print("  - s5973-02 -> Hamamatsu S5973-02 with tia_gain=11.3, comparator rails 0.0/3.3 V, logic-high threshold 1.65 V")
+    print("Applies the S5973-02 active area, responsivity, dark current, TIA gain, comparator model, and comparator baseline offset.")
 
 def _save_csv_json(outdir, results):
     ts = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
@@ -170,6 +182,9 @@ def main():
     runp.add_argument("--rin", type=float, default=None, help="Relative Intensity Noise factor")
     runp.add_argument("--tia-gain", type=float, default=None, help="Extra analog gain applied after the photodiode current-to-voltage stage")
     runp.add_argument("--baseline-offset", type=float, default=None, help="Fixed comparator or baseline offset in volts added to the detection threshold")
+    runp.add_argument("--comparator-low", type=float, default=None, help="Comparator low output rail in volts")
+    runp.add_argument("--comparator-high", type=float, default=None, help="Comparator high output rail in volts")
+    runp.add_argument("--logic-high-threshold", type=float, default=None, help="PSoC logic high threshold in volts")
     runp.add_argument("--threshold-mult", type=float, default=1.0, help="Detection threshold multiplier applied to simulated noise floor voltage")
     runp.add_argument("--save", action="store_true")
     runp.add_argument("--out", default=None, help="Output directory (used with --save)")
@@ -220,8 +235,18 @@ def main():
         results["V_threshold_total_V"] = [baseline_offset_v + v for v in results["V_threshold_noise_V"]]
         results["signal_detected_full_scale"] = [1 if vs >= vt else 0 for vs, vt in zip(results["V_sig_V"], results["V_threshold_total_V"])]
 
+        comp_low = cfg.receiver.comparator_low_V
+        comp_high = cfg.receiver.comparator_high_V
+        logic_high = cfg.receiver.psoc_logic_high_threshold_V
+
+        results["V_comparator_out_V"] = [comp_high if det == 1 else comp_low for det in results["signal_detected_full_scale"]]
+        results["V_psoc_logic_threshold_V"] = [logic_high for _ in results["distance_m"]]
+        results["psoc_digital_high"] = [1 if v >= logic_high else 0 for v in results["V_comparator_out_V"]]
+
         detected_distances = [d for d, det in zip(results["distance_m"], results["signal_detected_full_scale"]) if det == 1]
         max_detect_distance = max(detected_distances) if detected_distances else None
+        digital_high_distances = [d for d, det in zip(results["distance_m"], results["psoc_digital_high"]) if det == 1]
+        max_digital_high_distance = max(digital_high_distances) if digital_high_distances else None
 
         min_ber = min(results["BER"])
         min_idx = results["BER"].index(min_ber)
@@ -229,10 +254,16 @@ def main():
         print(f"Min BER observed: {min_ber:.3e} at distance={results['distance_m'][min_idx]} m")
         print(f"Detection threshold multiplier: {threshold_mult:.3f} x noise floor")
         print(f"Fixed baseline offset: {baseline_offset_v:.6f} V")
+        print(f"Comparator rails: low={comp_low:.3f} V, high={comp_high:.3f} V")
+        print(f"PSoC logic-high threshold: {logic_high:.3f} V")
         if max_detect_distance is not None:
-            print(f"Max detected distance above threshold: {max_detect_distance} m")
+            print(f"Max detected distance above analog threshold: {max_detect_distance} m")
         else:
-            print("No distances exceeded the detection threshold.")
+            print("No distances exceeded the analog detection threshold.")
+        if max_digital_high_distance is not None:
+            print(f"Max distance interpreted as digital high by PSoC: {max_digital_high_distance} m")
+        else:
+            print("No distances produced a valid digital high at the simulated PSoC.")
 
         outdir = None
         if args.save:
@@ -245,6 +276,8 @@ def main():
                     "SNR vs Distance", save=args.save, outname="snr_dB.png")
         plot_overlay_curves(results["distance_m"], results["V_sig_V"], "Signal Voltage", results["V_threshold_total_V"], "Detection Threshold",
                             "Voltage at Simulated PSoC (V)", "Simulated PSoC Signal Voltage and Threshold vs Distance", save=args.save, outname="psoc_signal_threshold_voltage_V.png")
+        plot_overlay_curves(results["distance_m"], results["V_comparator_out_V"], "Comparator Output", results["V_psoc_logic_threshold_V"], "PSoC Logic Threshold",
+                            "Voltage (V)", "Comparator Output and PSoC Logic Threshold vs Distance", save=args.save, outname="psoc_digital_logic_voltage_V.png")
         plot_curves(results["distance_m"], results["BER"], "BER",
                     "BER vs Distance", save=args.save, outname="ber.png")
 
