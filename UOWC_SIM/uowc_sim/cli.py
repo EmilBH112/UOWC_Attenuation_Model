@@ -1,4 +1,3 @@
-
 import argparse, os, csv, json, math
 from datetime import datetime
 from .config import SimulationConfig, ReceiverConfig, TransmitterConfig, WaterConfig, TurbulenceConfig, NoiseConfig, SimulationGrid
@@ -40,6 +39,7 @@ RX_PRESETS = {
     },
 }
 
+
 def _preset_to_config(name: str, tx_type: str, turb_model: str, args) -> SimulationConfig:
     tx_type = tx_type or "led"
     turb_model = turb_model or "lognormal"
@@ -69,6 +69,7 @@ def _preset_to_config(name: str, tx_type: str, turb_model: str, args) -> Simulat
         wb_lambda=args.wb_lambda if args.wb_lambda is not None else 1.0,
     )
     return SimulationConfig(tx, rx, water, turb, noise, grid, tx_type=tx_type)
+
 
 def _apply_overrides(cfg: SimulationConfig, args) -> SimulationConfig:
     if args.tx is not None:
@@ -111,19 +112,23 @@ def _apply_overrides(cfg: SimulationConfig, args) -> SimulationConfig:
         cfg.receiver.psoc_logic_high_threshold_V = args.logic_high_threshold
     return cfg
 
+
 def _apply_rx_preset(cfg: SimulationConfig, rx_name: str) -> SimulationConfig:
     preset = RX_PRESETS[rx_name]
     for key, value in preset.items():
         setattr(cfg.receiver, key, value)
     return cfg
 
+
 def _resolve_led_config(name: str) -> str:
     return LED_CONFIGS[name]
+
 
 def _print_water_presets():
     print("Water presets (lambda=520 nm):")
     for k, v in PRESETS_520NM.items():
         print(f"  - {k}: alpha={v.alpha_m_inv}  beta={v.beta_m_inv}  c={v.c_m_inv}")
+
 
 def _print_led_presets():
     print("LED presets:")
@@ -132,10 +137,12 @@ def _print_led_presets():
     print("  - green      -> L135-G525003500000_98mA.yml")
     print("You can also pass the exact part number to --led.")
 
+
 def _print_rx_presets():
     print("Receiver presets:")
     print("  - s5973-02 -> Hamamatsu S5973-02 with tia_gain=11.3, comparator rails 0.0/3.3 V, logic-high threshold 1.65 V")
     print("Applies the S5973-02 active area, responsivity, dark current, TIA gain, comparator model, and comparator baseline offset.")
+
 
 def _save_csv_json(outdir, results):
     ts = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
@@ -153,8 +160,12 @@ def _save_csv_json(outdir, results):
         json.dump(results, f, indent=2)
     return csv_path, json_path
 
+
 def main():
-    p = argparse.ArgumentParser(prog="uowc_sim")
+    p = argparse.ArgumentParser(
+        prog="uowc_sim",
+        epilog="Example: python -m UOWC_SIM.uowc_sim.cli run --led green --rx s5973-02 --dmax 4 --threshold-mult 2.0 --baseline-offset 0.05 --save",
+    )
     sub = p.add_subparsers(dest="cmd")
 
     p.add_argument("--list", action="store_true", help="List water presets and exit")
@@ -274,10 +285,15 @@ def main():
                     "Received Power vs Distance", save=args.save, outname="received_power_dBm.png")
         plot_curves(results["distance_m"], results["SNR_dB"], "SNR (dB)",
                     "SNR vs Distance", save=args.save, outname="snr_dB.png")
+        plot_curves(results["distance_m"], results["V_sig_V"], "Signal Voltage at Simulated PSoC (µV)",
+                    "Simulated PSoC Signal Voltage vs Distance", save=args.save, outname="psoc_signal_voltage_uV.png",
+                    scale=1e6, x_min=0.0, x_max=min(4.0, max(results["distance_m"])), y_min=0.0)
         plot_overlay_curves(results["distance_m"], results["V_sig_V"], "Signal Voltage", results["V_threshold_total_V"], "Detection Threshold",
-                            "Voltage at Simulated PSoC (V)", "Simulated PSoC Signal Voltage and Threshold vs Distance", save=args.save, outname="psoc_signal_threshold_voltage_V.png")
+                            "Voltage at Simulated PSoC (µV)", "Simulated PSoC Signal Voltage and Threshold vs Distance", save=args.save, outname="psoc_signal_threshold_voltage_uV.png",
+                            scale=1e6, x_min=0.0, x_max=min(4.0, max(results["distance_m"])), y_min=0.0)
         plot_overlay_curves(results["distance_m"], results["V_comparator_out_V"], "Comparator Output", results["V_psoc_logic_threshold_V"], "PSoC Logic Threshold",
-                            "Voltage (V)", "Comparator Output and PSoC Logic Threshold vs Distance", save=args.save, outname="psoc_digital_logic_voltage_V.png")
+                            "Voltage (V)", "Comparator Output and PSoC Logic Threshold vs Distance", save=args.save, outname="psoc_digital_logic_voltage_V.png",
+                            scale=1.0, x_min=0.0, x_max=min(4.0, max(results["distance_m"])), y_min=0.0)
         plot_curves(results["distance_m"], results["BER"], "BER",
                     "BER vs Distance", save=args.save, outname="ber.png")
 
@@ -288,6 +304,7 @@ def main():
         return
 
     p.print_help()
+
 
 if __name__ == "__main__":
     main()
