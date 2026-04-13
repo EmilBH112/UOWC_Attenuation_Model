@@ -15,6 +15,7 @@ class ReceiverConfig:
     Idark_A: float = 1e-9
     bandwidth_Hz: float = 1e6
     tia_gain: float = 1.0
+    baseline_offset_V: float = 0.0
 
 @dataclass
 class TransmitterConfig:
