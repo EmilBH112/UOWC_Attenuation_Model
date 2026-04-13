@@ -1,6 +1,6 @@
 
 from dataclasses import dataclass, asdict
-from typing import Optional, Dict, Any
+from typing import Optional
 import yaml
 
 @dataclass
@@ -14,6 +14,7 @@ class ReceiverConfig:
     R_load: float = 50.0
     Idark_A: float = 1e-9
     bandwidth_Hz: float = 1e6
+    tia_gain: float = 1.0
 
 @dataclass
 class TransmitterConfig:

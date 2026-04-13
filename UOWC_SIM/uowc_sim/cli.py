@@ -20,17 +20,20 @@ LED_CONFIGS = {
 # Active area is modeled as a 0.4 mm diameter circle.
 # Responsivity is set to a visible-band reference value.
 # Dark current is reduced to reflect the low-noise device.
+# tia_gain models the extra analog gain in your real hardware chain.
 S5973_02_AREA_M2 = math.pi * (0.2e-3 ** 2)
 RX_PRESETS = {
     "s5973-02": {
         "area_m2": S5973_02_AREA_M2,
         "responsivity_A_per_W": 0.301,
         "Idark_A": 1e-10,
+        "tia_gain": 11.3,
     },
     "S5973-02": {
         "area_m2": S5973_02_AREA_M2,
         "responsivity_A_per_W": 0.301,
         "Idark_A": 1e-10,
+        "tia_gain": 11.3,
     },
 }
 
@@ -93,6 +96,8 @@ def _apply_overrides(cfg: SimulationConfig, args) -> SimulationConfig:
         cfg.grid.mc_realizations = args.mc
     if args.seed is not None:
         cfg.grid.seed = args.seed
+    if args.tia_gain is not None:
+        cfg.receiver.tia_gain = args.tia_gain
     return cfg
 
 def _apply_rx_preset(cfg: SimulationConfig, rx_name: str) -> SimulationConfig:
@@ -118,8 +123,8 @@ def _print_led_presets():
 
 def _print_rx_presets():
     print("Receiver presets:")
-    print("  - s5973-02 -> Hamamatsu S5973-02")
-    print("Applies the S5973-02 active area, responsivity, and dark current.")
+    print("  - s5973-02 -> Hamamatsu S5973-02 with tia_gain=11.3")
+    print("Applies the S5973-02 active area, responsivity, dark current, and TIA gain.")
 
 def _save_csv_json(outdir, results):
     ts = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
@@ -164,6 +169,7 @@ def main():
     runp.add_argument("--wb-k", type=float, default=None)
     runp.add_argument("--wb-lambda", type=float, default=None)
     runp.add_argument("--rin", type=float, default=None, help="Relative Intensity Noise factor")
+    runp.add_argument("--tia-gain", type=float, default=None, help="Extra analog gain applied after the photodiode current-to-voltage stage")
     runp.add_argument("--save", action="store_true")
     runp.add_argument("--out", default=None, help="Output directory (used with --save)")
 
@@ -203,6 +209,8 @@ def main():
                 p.error(f"Unknown receiver preset '{args.rx}'. Use --list-rx to see available options.")
             cfg = _apply_rx_preset(cfg, args.rx)
             source_desc = f"{source_desc}  rx={args.rx}"
+
+        cfg = _apply_overrides(cfg, args)
 
         results = run_sim(cfg)
 

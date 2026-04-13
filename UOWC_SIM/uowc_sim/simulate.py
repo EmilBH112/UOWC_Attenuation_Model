@@ -1,5 +1,6 @@
 
 from typing import Dict, List
+import math
 import numpy as np
 from .config import SimulationConfig
 from .turbulence import rng, draw_fturb
@@ -21,6 +22,10 @@ def run_sim(config: SimulationConfig) -> Dict[str, List[float]]:
     out_SNRlin = []
     out_SNRdB = []
     out_BER = []
+    out_Isig = []
+    out_Inoise_rms = []
+    out_Vsig = []
+    out_Vnoise_rms = []
 
     for d in distances:
         acc_Pr = 0.0
@@ -55,11 +60,21 @@ def run_sim(config: SimulationConfig) -> Dict[str, List[float]]:
             T_K=rx.T, R_load_ohm=rx.R_load, Idark_A=rx.Idark_A, rin=noise.rin
         )
 
+        i_sig = rx.responsivity_A_per_W * Pr_mean
+        i_noise_rms = math.sqrt(max(0.0, nvar))
+        tia_gain = max(0.0, rx.tia_gain)
+        v_sig = i_sig * rx.R_load * tia_gain
+        v_noise_rms = i_noise_rms * rx.R_load * tia_gain
+
         snr_lin = snr_linear(rx.responsivity_A_per_W, Pr_mean, nvar)
         out_Pr.append(Pr_mean)
         out_SNRlin.append(snr_lin)
         out_SNRdB.append(snr_db(snr_lin))
         out_BER.append(ber_from_snr(snr_lin))
+        out_Isig.append(i_sig)
+        out_Inoise_rms.append(i_noise_rms)
+        out_Vsig.append(v_sig)
+        out_Vnoise_rms.append(v_noise_rms)
 
     return {
         "distance_m": distances.tolist(),
@@ -68,4 +83,8 @@ def run_sim(config: SimulationConfig) -> Dict[str, List[float]]:
         "SNR_lin": out_SNRlin,
         "SNR_dB": out_SNRdB,
         "BER": out_BER,
+        "I_sig_A": out_Isig,
+        "I_noise_rms_A": out_Inoise_rms,
+        "V_sig_V": out_Vsig,
+        "V_noise_rms_V": out_Vnoise_rms,
     }
