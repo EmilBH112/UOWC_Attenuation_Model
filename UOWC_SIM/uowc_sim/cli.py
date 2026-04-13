@@ -4,7 +4,7 @@ from datetime import datetime
 from .config import SimulationConfig, ReceiverConfig, TransmitterConfig, WaterConfig, TurbulenceConfig, NoiseConfig, SimulationGrid
 from .water import PRESETS_520NM
 from .simulate import run_sim
-from .plotting import plot_curves
+from .plotting import plot_curves, plot_overlay_curves
 
 CONFIGS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "configs"))
 LED_CONFIGS = {
@@ -16,11 +16,6 @@ LED_CONFIGS = {
     "L135-G525003500000": os.path.join(CONFIGS_DIR, "L135-G525003500000_98mA.yml"),
 }
 
-# Hamamatsu S5973-02 built-in receiver preset.
-# Active area is modeled as a 0.4 mm diameter circle.
-# Responsivity is set to a visible-band reference value.
-# Dark current is reduced to reflect the low-noise device.
-# tia_gain models the extra analog gain in your real hardware chain.
 S5973_02_AREA_M2 = math.pi * (0.2e-3 ** 2)
 RX_PRESETS = {
     "s5973-02": {
@@ -170,6 +165,7 @@ def main():
     runp.add_argument("--wb-lambda", type=float, default=None)
     runp.add_argument("--rin", type=float, default=None, help="Relative Intensity Noise factor")
     runp.add_argument("--tia-gain", type=float, default=None, help="Extra analog gain applied after the photodiode current-to-voltage stage")
+    runp.add_argument("--threshold-mult", type=float, default=1.0, help="Detection threshold multiplier applied to simulated noise floor voltage")
     runp.add_argument("--save", action="store_true")
     runp.add_argument("--out", default=None, help="Output directory (used with --save)")
 
@@ -211,13 +207,24 @@ def main():
             source_desc = f"{source_desc}  rx={args.rx}"
 
         cfg = _apply_overrides(cfg, args)
-
         results = run_sim(cfg)
+
+        threshold_mult = max(0.0, args.threshold_mult)
+        results["V_threshold_V"] = [threshold_mult * v for v in results["V_noise_rms_V"]]
+        results["signal_detected_full_scale"] = [1 if vs >= vt else 0 for vs, vt in zip(results["V_sig_V"], results["V_threshold_V"])]
+
+        detected_distances = [d for d, det in zip(results["distance_m"], results["signal_detected_full_scale"]) if det == 1]
+        max_detect_distance = max(detected_distances) if detected_distances else None
 
         min_ber = min(results["BER"])
         min_idx = results["BER"].index(min_ber)
         print(f"Ran {source_desc}  tx={cfg.tx_type}  turb={cfg.turb.model}  distances={results['distance_m'][0]}..{results['distance_m'][-1]} m")
         print(f"Min BER observed: {min_ber:.3e} at distance={results['distance_m'][min_idx]} m")
+        print(f"Detection threshold multiplier: {threshold_mult:.3f} x noise floor")
+        if max_detect_distance is not None:
+            print(f"Max detected distance above threshold: {max_detect_distance} m")
+        else:
+            print("No distances exceeded the detection threshold.")
 
         outdir = None
         if args.save:
@@ -228,8 +235,8 @@ def main():
                     "Received Power vs Distance", save=args.save, outname="received_power_dBm.png")
         plot_curves(results["distance_m"], results["SNR_dB"], "SNR (dB)",
                     "SNR vs Distance", save=args.save, outname="snr_dB.png")
-        plot_curves(results["distance_m"], results["V_sig_V"], "Signal Voltage at Simulated PSoC (V)",
-                    "Simulated PSoC Signal Voltage vs Distance", save=args.save, outname="psoc_signal_voltage_V.png")
+        plot_overlay_curves(results["distance_m"], results["V_sig_V"], "Signal Voltage", results["V_threshold_V"], "Detection Threshold",
+                            "Voltage at Simulated PSoC (V)", "Simulated PSoC Signal Voltage and Threshold vs Distance", save=args.save, outname="psoc_signal_threshold_voltage_V.png")
         plot_curves(results["distance_m"], results["BER"], "BER",
                     "BER vs Distance", save=args.save, outname="ber.png")
 
