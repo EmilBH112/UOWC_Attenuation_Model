@@ -318,9 +318,9 @@ def main():
             os.makedirs(outdir, exist_ok=True)
 
         plot_curves(results["distance_m"], results["Pr_dBm"], "Received Power (dBm)",
-                    "Received Power vs Distance", save=args.save, outname="received_power_dBm.png")
+                    "Received Power vs Distance", save=args.save, outname="received_power_dBm.png", outdir=outdir)
         plot_curves(results["distance_m"], results["SNR_dB"], "SNR (dB)",
-                    "SNR vs Distance", save=args.save, outname="snr_dB.png")
+                    "SNR vs Distance", save=args.save, outname="snr_dB.png", outdir=outdir)
         voltage_plot_x_max = min(4.0, max(results["distance_m"]))
         default_voltage_x_min = 0.1 if args.save else 0.0
         voltage_plot_x_min = args.voltage_plot_xmin if args.voltage_plot_xmin is not None else default_voltage_x_min
@@ -329,16 +329,16 @@ def main():
         plot_curves(results["distance_m"], results["V_sig_V"], "Signal Voltage at Simulated PSoC (µV)",
                     "Simulated PSoC Signal Voltage vs Distance", save=args.save, outname="psoc_signal_voltage_uV.png",
                     scale=1e6, x_min=voltage_plot_x_min, x_max=voltage_plot_x_max, y_min=0.0,
-                    auto_y_from_visible=True)
+                    auto_y_from_visible=True, outdir=outdir)
         plot_overlay_curves(results["distance_m"], results["V_sig_V"], "Signal Voltage", results["V_threshold_total_V"], "Detection Threshold",
                             "Voltage at Simulated PSoC (µV)", "Simulated PSoC Signal Voltage and Threshold vs Distance", save=args.save, outname="psoc_signal_threshold_voltage_uV.png",
                             scale=1e6, x_min=voltage_plot_x_min, x_max=voltage_plot_x_max, y_min=0.0,
-                            auto_y_from_visible=True)
+                            auto_y_from_visible=True, outdir=outdir)
         plot_overlay_curves(results["distance_m"], results["V_comparator_out_V"], "Comparator Output", results["V_psoc_logic_threshold_V"], "PSoC Logic Threshold",
                             "Voltage (V)", "Comparator Output and PSoC Logic Threshold vs Distance", save=args.save, outname="psoc_digital_logic_voltage_V.png",
-                            scale=1.0, x_min=voltage_plot_x_min, x_max=voltage_plot_x_max, y_min=0.0)
+                            scale=1.0, x_min=voltage_plot_x_min, x_max=voltage_plot_x_max, y_min=0.0, outdir=outdir)
         plot_curves(results["distance_m"], results["BER"], "BER",
-                    "BER vs Distance", save=args.save, outname="ber.png")
+                    "BER vs Distance", save=args.save, outname="ber.png", outdir=outdir)
 
         if args.save:
             csvp, jsonp = _save_csv_json(outdir, results)
