@@ -81,8 +81,9 @@ def plot_curves(
     zero_line=True,
     marker="o",
     auto_y_from_visible=False,
+    outdir=None,
 ):
-    outdir = _prepare_outdir(save)
+    target_outdir = outdir if (save and outdir) else _prepare_outdir(save)
     x = np.asarray(distances_m, dtype=float)
     y = np.asarray(values, dtype=float) * scale
 
@@ -110,14 +111,14 @@ def plot_curves(
     ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=False))
     ax.ticklabel_format(style="plain", axis="y")
 
-    if save and outdir:
-        path = os.path.join(outdir, outname)
+    if save and target_outdir:
+        path = os.path.join(target_outdir, outname)
         plt.savefig(path, dpi=200, bbox_inches="tight")
     else:
         plt.show()
 
     plt.close()
-    return outdir
+    return target_outdir
 
 
 def plot_overlay_curves(
@@ -137,8 +138,9 @@ def plot_overlay_curves(
     y_max=None,
     zero_line=True,
     auto_y_from_visible=False,
+    outdir=None,
 ):
-    outdir = _prepare_outdir(save)
+    target_outdir = outdir if (save and outdir) else _prepare_outdir(save)
     x = np.asarray(distances_m, dtype=float)
     y_a = np.asarray(values_a, dtype=float) * scale
     y_b = np.asarray(values_b, dtype=float) * scale
@@ -169,11 +171,11 @@ def plot_overlay_curves(
     ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=False))
     ax.ticklabel_format(style="plain", axis="y")
 
-    if save and outdir:
-        path = os.path.join(outdir, outname)
+    if save and target_outdir:
+        path = os.path.join(target_outdir, outname)
         plt.savefig(path, dpi=200, bbox_inches="tight")
     else:
         plt.show()
 
     plt.close()
-    return outdir
+    return target_outdir

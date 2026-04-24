@@ -38,7 +38,7 @@ def run_sim(config: SimulationConfig) -> Dict[str, List[float]]:
             }, r)
 
             if config.tx_type.lower() == "led":
-                beam_axis_deg = tx.led_divergence_deg
+                beam_axis_deg = tx.led_divergence_deg / 2.0
                 Pr = received_power_led(
                     Pt_W=tx.power_W, eta_t=tx.eta_t, eta_r=rx.eta_r,
                     c_m_inv=water.alpha_m_inv + water.beta_m_inv, d_m=d,
