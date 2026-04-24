@@ -19,6 +19,7 @@ This repository implements an end-to-end UOWC simulation pipeline aligned with t
 - Configuration first: edit `configs/*.yml` or pass CLI flags.
 - CLI interface to pick scenario and run plots.
 - Minimal dependencies: numpy, pyyaml, matplotlib.
+- Optional glossy-pipe guiding model with total internal reflection (TIR) approximation to emulate waveguide-like confinement and longer effective signal reach.
 
 > Note: Formulas implemented as in-paper equations: (7)-(10) noise, (16)/(22) received power for LED-PS / LD-PS, (18) Lambertian order, (19) receiver concentrator gain, (20)/(21) TX optics gain, (23) SNR, (24) BER ~= Q(sqrt(SNR)).
 
@@ -38,6 +39,9 @@ python -m UOWC_SIM.uowc_sim.cli run --preset clear_ocean --tx ld --turb gengamma
 
 # Produce summary tables and save plots
 python -m UOWC_SIM.uowc_sim.cli run --preset turbid_harbor --tx ld --turb weibull --wb-k 0.7 --wb-lambda 1.0 --save
+
+# Blue LED in coastal water with glossy-pipe TIR enabled (1200 baud profile, ~9.6 mV near 1.2 m)
+python -m UOWC_SIM.uowc_sim.cli run --config UOWC_SIM/configs/blue_coastal_pipe_tir_1200baud.yml
 ```
 
 Outputs (plots + CSV/JSON) are saved under `outputs/<timestamp>/` when `--save` is used.
@@ -71,4 +75,3 @@ scripts/
 - You can change wavelength and extend `water.py` with alpha(lambda), beta(lambda) tables for other wavelengths.
 - CLI accepts Monte-Carlo count for turbulence (`--mc`) to average metrics.
 - The "protocol optimization" step is a placeholder that prints hints based on results.
-

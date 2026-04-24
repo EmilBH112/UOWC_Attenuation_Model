@@ -1,0 +1,55 @@
+# Blue LED in coastal water with glossy-pipe guiding and 1200 baud receiver bandwidth
+# Target: ~9.6 mV around 1.2 m in the simulated PSoC voltage output.
+tx_type: led
+transmitter:
+  eta_t: 0.9
+  power_W: 0.343
+  wavelength_nm: 475.0
+  led_theta_half_deg: 57.5
+  led_divergence_deg: 57.5
+  ld_divergence_deg: 9.0
+  g_tx: 1.0
+receiver:
+  eta_r: 0.9
+  area_m2: 1.2566370614359172e-07
+  responsivity_A_per_W: 0.301
+  fov_deg: 30.0
+  n_lens: 1.5
+  T: 300.0
+  R_load: 50.0
+  Idark_A: 1.0e-10
+  bandwidth_Hz: 1200.0
+  tia_gain: 8500.0
+  baseline_offset_V: 0.0
+  comparator_low_V: 0.0
+  comparator_high_V: 3.3
+  psoc_logic_high_threshold_V: 1.65
+water:
+  name: coastal_ocean
+  alpha_m_inv: 0.2179
+  beta_m_inv: 0.09966
+turbulence:
+  model: lognormal
+  scint_index: 0.1
+  gg_alpha: 1.0
+  gg_beta: 2.0
+  gg_nu: 1.0
+  wb_k: 1.2
+  wb_lambda: 1.0
+noise:
+  rin: 0.0
+pipe_tir:
+  enabled: true
+  radius_m: 0.02
+  wall_reflectivity: 0.96
+  water_refractive_index: 1.333
+  wall_refractive_index: 1.0
+  incidence_axis_deg: 45.0
+  coupling_efficiency: 0.9
+  max_guiding_gain: 100.0
+grid:
+  d_min_m: 1.2
+  d_max_m: 1.2
+  d_step_m: 1.0
+  mc_realizations: 1
+  seed: 12345
