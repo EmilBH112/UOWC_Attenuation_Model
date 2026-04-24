@@ -287,10 +287,12 @@ def main():
                     "SNR vs Distance", save=args.save, outname="snr_dB.png")
         plot_curves(results["distance_m"], results["V_sig_V"], "Signal Voltage at Simulated PSoC (µV)",
                     "Simulated PSoC Signal Voltage vs Distance", save=args.save, outname="psoc_signal_voltage_uV.png",
-                    scale=1e6, x_min=0.0, x_max=min(4.0, max(results["distance_m"])), y_min=0.0)
+                    scale=1e6, x_min=0.0, x_max=min(4.0, max(results["distance_m"])), y_min=0.0,
+                    auto_y_from_visible=True)
         plot_overlay_curves(results["distance_m"], results["V_sig_V"], "Signal Voltage", results["V_threshold_total_V"], "Detection Threshold",
                             "Voltage at Simulated PSoC (µV)", "Simulated PSoC Signal Voltage and Threshold vs Distance", save=args.save, outname="psoc_signal_threshold_voltage_uV.png",
-                            scale=1e6, x_min=0.0, x_max=min(4.0, max(results["distance_m"])), y_min=0.0)
+                            scale=1e6, x_min=0.0, x_max=min(4.0, max(results["distance_m"])), y_min=0.0,
+                            auto_y_from_visible=True)
         plot_overlay_curves(results["distance_m"], results["V_comparator_out_V"], "Comparator Output", results["V_psoc_logic_threshold_V"], "PSoC Logic Threshold",
                             "Voltage (V)", "Comparator Output and PSoC Logic Threshold vs Distance", save=args.save, outname="psoc_digital_logic_voltage_V.png",
                             scale=1.0, x_min=0.0, x_max=min(4.0, max(results["distance_m"])), y_min=0.0)
