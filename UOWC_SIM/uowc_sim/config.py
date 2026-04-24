@@ -1,7 +1,19 @@
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from typing import Optional
 import yaml
+
+
+@dataclass
+class PipeTIRConfig:
+    enabled: bool = False
+    radius_m: float = 0.02
+    wall_reflectivity: float = 0.95
+    water_refractive_index: float = 1.333
+    wall_refractive_index: float = 1.0
+    incidence_axis_deg: Optional[float] = None
+    coupling_efficiency: float = 0.85
+    max_guiding_gain: float = 50.0
 
 @dataclass
 class ReceiverConfig:
@@ -70,6 +82,7 @@ class SimulationConfig:
     turb: TurbulenceConfig
     noise: NoiseConfig
     grid: SimulationGrid
+    pipe_tir: PipeTIRConfig = field(default_factory=PipeTIRConfig)
     tx_type: str = "led"
 
     @staticmethod
@@ -85,7 +98,8 @@ class SimulationConfig:
         grid = ld(SimulationGrid, data, "grid", SimulationGrid())
         turb = ld(TurbulenceConfig, data, "turbulence", TurbulenceConfig())
         noise = ld(NoiseConfig, data, "noise", NoiseConfig())
+        pipe_tir = ld(PipeTIRConfig, data, "pipe_tir", PipeTIRConfig())
         w = data.get("water", {})
         water = WaterConfig(**w)
         tx_type = data.get("tx_type", "led")
-        return SimulationConfig(tx, rx, water, turb, noise, grid, tx_type)
+        return SimulationConfig(tx, rx, water, turb, noise, grid, pipe_tir, tx_type)

@@ -110,6 +110,24 @@ def _apply_overrides(cfg: SimulationConfig, args) -> SimulationConfig:
         cfg.receiver.comparator_high_V = args.comparator_high
     if args.logic_high_threshold is not None:
         cfg.receiver.psoc_logic_high_threshold_V = args.logic_high_threshold
+    if args.baud is not None:
+        cfg.receiver.bandwidth_Hz = max(1.0, args.baud)
+    if args.pipe_tir is not None:
+        cfg.pipe_tir.enabled = args.pipe_tir
+    if args.pipe_radius_m is not None:
+        cfg.pipe_tir.radius_m = args.pipe_radius_m
+    if args.pipe_wall_reflectivity is not None:
+        cfg.pipe_tir.wall_reflectivity = args.pipe_wall_reflectivity
+    if args.pipe_water_n is not None:
+        cfg.pipe_tir.water_refractive_index = args.pipe_water_n
+    if args.pipe_wall_n is not None:
+        cfg.pipe_tir.wall_refractive_index = args.pipe_wall_n
+    if args.pipe_incidence_deg is not None:
+        cfg.pipe_tir.incidence_axis_deg = args.pipe_incidence_deg
+    if args.pipe_coupling_efficiency is not None:
+        cfg.pipe_tir.coupling_efficiency = args.pipe_coupling_efficiency
+    if args.pipe_max_gain is not None:
+        cfg.pipe_tir.max_guiding_gain = args.pipe_max_gain
     return cfg
 
 
@@ -196,6 +214,15 @@ def main():
     runp.add_argument("--comparator-low", type=float, default=None, help="Comparator low output rail in volts")
     runp.add_argument("--comparator-high", type=float, default=None, help="Comparator high output rail in volts")
     runp.add_argument("--logic-high-threshold", type=float, default=None, help="PSoC logic high threshold in volts")
+    runp.add_argument("--baud", type=float, default=None, help="Approximate symbol rate in baud; mapped to receiver noise bandwidth")
+    runp.add_argument("--pipe-tir", action=argparse.BooleanOptionalAction, default=None, help="Enable/disable glossy pipe total internal reflection guiding model")
+    runp.add_argument("--pipe-radius-m", type=float, default=None, help="Inner pipe radius in meters")
+    runp.add_argument("--pipe-wall-reflectivity", type=float, default=None, help="Inner wall reflectivity when TIR condition is not met")
+    runp.add_argument("--pipe-water-n", type=float, default=None, help="Water refractive index inside the pipe")
+    runp.add_argument("--pipe-wall-n", type=float, default=None, help="Pipe wall refractive index (or surrounding medium)")
+    runp.add_argument("--pipe-incidence-deg", type=float, default=None, help="Beam incidence angle relative to pipe axis; defaults to source divergence")
+    runp.add_argument("--pipe-coupling-efficiency", type=float, default=None, help="Source-to-pipe coupling efficiency")
+    runp.add_argument("--pipe-max-gain", type=float, default=None, help="Cap on geometric guiding gain")
     runp.add_argument("--threshold-mult", type=float, default=1.0, help="Detection threshold multiplier applied to simulated noise floor voltage")
     runp.add_argument("--save", action="store_true")
     runp.add_argument("--out", default=None, help="Output directory (used with --save)")
@@ -269,6 +296,13 @@ def main():
         print(f"Fixed baseline offset: {baseline_offset_v:.6f} V")
         print(f"Comparator rails: low={comp_low:.3f} V, high={comp_high:.3f} V")
         print(f"PSoC logic-high threshold: {logic_high:.3f} V")
+        print(f"Receiver bandwidth (Hz): {cfg.receiver.bandwidth_Hz:.2f}")
+        if cfg.pipe_tir.enabled:
+            print("Glossy pipe TIR guiding: enabled")
+            print(f"  pipe radius={cfg.pipe_tir.radius_m:.4f} m  wall reflectivity={cfg.pipe_tir.wall_reflectivity:.3f}")
+            print(f"  n_water={cfg.pipe_tir.water_refractive_index:.3f}  n_wall={cfg.pipe_tir.wall_refractive_index:.3f}")
+        else:
+            print("Glossy pipe TIR guiding: disabled")
         if max_detect_distance is not None:
             print(f"Max detected distance above analog threshold: {max_detect_distance} m")
         else:

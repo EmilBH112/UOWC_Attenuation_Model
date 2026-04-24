@@ -29,3 +29,43 @@ def tx_optics_gain(f1: float = None, f2: float = None, keplerian: bool = False, 
         return f2 / f1
     # Galilean (magnitude of f1 used)
     return f2 / abs(f1)
+
+
+def pipe_tir_guiding_gain(d_m: float,
+                          beam_axis_deg: float,
+                          radius_m: float,
+                          wall_reflectivity: float,
+                          n_water: float,
+                          n_wall: float,
+                          coupling_efficiency: float,
+                          max_guiding_gain: float) -> float:
+    """Approximate gain from a glossy water-filled pipe with internal guiding.
+
+    This combines reduced geometric spread (guided path) with per-bounce wall/TIR loss.
+    """
+    if d_m <= 0.0:
+        return 1.0
+
+    theta_axis_deg = min(89.0, max(0.1, abs(beam_axis_deg)))
+    theta_axis = math.radians(theta_axis_deg)
+
+    n_water = max(1.0, n_water)
+    n_wall = max(1e-9, n_wall)
+    wall_reflectivity = min(1.0, max(0.0, wall_reflectivity))
+    coupling_efficiency = min(1.0, max(0.0, coupling_efficiency))
+
+    theta_normal_deg = 90.0 - theta_axis_deg
+    critical_deg = 90.0
+    if n_water > n_wall:
+        critical_deg = math.degrees(math.asin(n_wall / n_water))
+    tir_active = theta_normal_deg >= critical_deg
+
+    reflectivity_effective = 0.999 if tir_active else wall_reflectivity
+    radius = max(1e-5, radius_m)
+    bounces_per_m = math.tan(theta_axis) / (2.0 * radius)
+    bounce_transmission = reflectivity_effective ** (bounces_per_m * d_m)
+
+    confinement_gain = (max(0.1, d_m) / 0.2) ** 2
+    confinement_gain = min(max(1.0, confinement_gain), max(1.0, max_guiding_gain))
+
+    return coupling_efficiency * confinement_gain * bounce_transmission

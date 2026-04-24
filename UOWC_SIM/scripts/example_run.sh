@@ -4,3 +4,4 @@ python -m UOWC_SIM.uowc_sim.cli run --preset coastal_ocean --tx led --turb genga
 python -m UOWC_SIM.uowc_sim.cli run --preset pure_sea --tx led --turb lognormal --dmin 0.001 --dmax 100 --step 1
 python -m UOWC_SIM.uowc_sim.cli run --preset clear_ocean --tx ld --turb weibull --wb-k 0.8 --wb-lambda 1.0 --save
 python -m UOWC_SIM.uowc_sim.cli run --preset turbid_harbor --tx ld --turb weibull --wb-k 0.7 --wb-lambda 1.0 --save
+python -m UOWC_SIM.uowc_sim.cli run --config UOWC_SIM/configs/blue_coastal_pipe_tir_1200baud.yml

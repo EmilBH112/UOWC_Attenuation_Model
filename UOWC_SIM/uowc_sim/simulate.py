@@ -7,6 +7,7 @@ from .turbulence import rng, draw_fturb
 from .noise import total_variance
 from .transmitter import received_power_led, received_power_ld
 from .metrics import snr_linear, snr_db, ber_from_snr, to_dBm
+from .optics import pipe_tir_guiding_gain
 
 def run_sim(config: SimulationConfig) -> Dict[str, List[float]]:
     g = config.grid
@@ -37,6 +38,7 @@ def run_sim(config: SimulationConfig) -> Dict[str, List[float]]:
             }, r)
 
             if config.tx_type.lower() == "led":
+                beam_axis_deg = tx.led_divergence_deg
                 Pr = received_power_led(
                     Pt_W=tx.power_W, eta_t=tx.eta_t, eta_r=rx.eta_r,
                     c_m_inv=water.alpha_m_inv + water.beta_m_inv, d_m=d,
@@ -45,6 +47,7 @@ def run_sim(config: SimulationConfig) -> Dict[str, List[float]]:
                     A_pd_m2=rx.area_m2, Fturb=Ft
                 )
             else:
+                beam_axis_deg = tx.ld_divergence_deg / 2.0
                 Pr = received_power_ld(
                     Pt_W=tx.power_W, eta_t=tx.eta_t, eta_r=rx.eta_r,
                     c_m_inv=water.alpha_m_inv + water.beta_m_inv, d_m=d,
@@ -52,6 +55,21 @@ def run_sim(config: SimulationConfig) -> Dict[str, List[float]]:
                     n_lens=rx.n_lens, fov_deg=rx.fov_deg, phi_deg=0.0,
                     A_pd_m2=rx.area_m2, Fturb=Ft
                 )
+
+            if config.pipe_tir.enabled:
+                incidence_axis_deg = config.pipe_tir.incidence_axis_deg
+                tir_beam_axis = beam_axis_deg if incidence_axis_deg is None else incidence_axis_deg
+                pipe_gain = pipe_tir_guiding_gain(
+                    d_m=d,
+                    beam_axis_deg=tir_beam_axis,
+                    radius_m=config.pipe_tir.radius_m,
+                    wall_reflectivity=config.pipe_tir.wall_reflectivity,
+                    n_water=config.pipe_tir.water_refractive_index,
+                    n_wall=config.pipe_tir.wall_refractive_index,
+                    coupling_efficiency=config.pipe_tir.coupling_efficiency,
+                    max_guiding_gain=config.pipe_tir.max_guiding_gain,
+                )
+                Pr *= pipe_gain
             acc_Pr += Pr
         Pr_mean = acc_Pr / float(max(1, g.mc_realizations))
 
