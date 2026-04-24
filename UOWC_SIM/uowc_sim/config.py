@@ -68,7 +68,7 @@ class NoiseConfig:
 
 @dataclass
 class SimulationGrid:
-    d_min_m: float = 1.0
+    d_min_m: float = 0.2
     d_max_m: float = 100.0
     d_step_m: float = 1.0
     mc_realizations: int = 1

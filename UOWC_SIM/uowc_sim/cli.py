@@ -48,7 +48,7 @@ def _preset_to_config(name: str, tx_type: str, turb_model: str, args) -> Simulat
     tx = TransmitterConfig()
     rx = ReceiverConfig()
     grid = SimulationGrid(
-        d_min_m=args.dmin if args.dmin is not None else 1.0,
+        d_min_m=args.dmin if args.dmin is not None else 0.2,
         d_max_m=args.dmax if args.dmax is not None else 100.0,
         d_step_m=args.step if args.step is not None else 1.0,
         mc_realizations=args.mc if args.mc is not None else 1,
@@ -227,7 +227,7 @@ def main():
     runp.add_argument("--save", action="store_true")
     runp.add_argument("--out", default=None, help="Output directory (used with --save)")
     runp.add_argument("--voltage-plot-xmin", type=float, default=None,
-                      help="Lower x-limit for voltage plots in meters (default: 0.1 m when --save, else 0.0 m)")
+                      help="Lower x-limit for voltage plots in meters (default: 0.2 m)")
 
     args = p.parse_args()
 
@@ -322,7 +322,7 @@ def main():
         plot_curves(results["distance_m"], results["SNR_dB"], "SNR (dB)",
                     "SNR vs Distance", save=args.save, outname="snr_dB.png", outdir=outdir)
         voltage_plot_x_max = min(4.0, max(results["distance_m"]))
-        default_voltage_x_min = 0.1 if args.save else 0.0
+        default_voltage_x_min = 0.2
         voltage_plot_x_min = args.voltage_plot_xmin if args.voltage_plot_xmin is not None else default_voltage_x_min
         voltage_plot_x_min = max(0.0, min(voltage_plot_x_min, voltage_plot_x_max))
 

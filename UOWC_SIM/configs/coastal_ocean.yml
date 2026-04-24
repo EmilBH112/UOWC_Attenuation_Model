@@ -32,7 +32,7 @@ turbulence:
 noise:
   rin: 0.0
 grid:
-  d_min_m: 1.0
+  d_min_m: 0.2
   d_max_m: 100.0
   d_step_m: 1.0
   mc_realizations: 1
