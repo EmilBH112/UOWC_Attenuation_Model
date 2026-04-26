@@ -81,6 +81,7 @@ def plot_curves(
     zero_line=True,
     marker="o",
     auto_y_from_visible=False,
+    y_scale="linear",
     outdir=None,
 ):
     target_outdir = outdir if (save and outdir) else _prepare_outdir(save)
@@ -108,8 +109,10 @@ def plot_curves(
         plt.ylim(bottom=y_min, top=y_max)
 
     ax = plt.gca()
-    ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=False))
-    ax.ticklabel_format(style="plain", axis="y")
+    ax.set_yscale(y_scale)
+    if y_scale == "linear":
+        ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=False))
+        ax.ticklabel_format(style="plain", axis="y")
 
     if save and target_outdir:
         path = os.path.join(target_outdir, outname)
@@ -138,6 +141,7 @@ def plot_overlay_curves(
     y_max=None,
     zero_line=True,
     auto_y_from_visible=False,
+    y_scale="linear",
     outdir=None,
 ):
     target_outdir = outdir if (save and outdir) else _prepare_outdir(save)
@@ -168,8 +172,10 @@ def plot_overlay_curves(
         plt.ylim(bottom=y_min, top=y_max)
 
     ax = plt.gca()
-    ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=False))
-    ax.ticklabel_format(style="plain", axis="y")
+    ax.set_yscale(y_scale)
+    if y_scale == "linear":
+        ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=False))
+        ax.ticklabel_format(style="plain", axis="y")
 
     if save and target_outdir:
         path = os.path.join(target_outdir, outname)

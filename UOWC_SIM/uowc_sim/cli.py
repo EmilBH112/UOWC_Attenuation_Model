@@ -321,7 +321,7 @@ def main():
                     "Received Power vs Distance", save=args.save, outname="received_power_dBm.png", outdir=outdir)
         plot_curves(results["distance_m"], results["SNR_dB"], "SNR (dB)",
                     "SNR vs Distance", save=args.save, outname="snr_dB.png", outdir=outdir)
-        voltage_plot_x_max = min(4.0, max(results["distance_m"]))
+        voltage_plot_x_max = max(results["distance_m"])
         default_voltage_x_min = 0.2
         voltage_plot_x_min = args.voltage_plot_xmin if args.voltage_plot_xmin is not None else default_voltage_x_min
         voltage_plot_x_min = max(0.0, min(voltage_plot_x_min, voltage_plot_x_max))
@@ -337,8 +337,11 @@ def main():
         plot_overlay_curves(results["distance_m"], results["V_comparator_out_V"], "Comparator Output", results["V_psoc_logic_threshold_V"], "PSoC Logic Threshold",
                             "Voltage (V)", "Comparator Output and PSoC Logic Threshold vs Distance", save=args.save, outname="psoc_digital_logic_voltage_V.png",
                             scale=1.0, x_min=voltage_plot_x_min, x_max=voltage_plot_x_max, y_min=0.0, outdir=outdir)
-        plot_curves(results["distance_m"], results["BER"], "BER",
-                    "BER vs Distance", save=args.save, outname="ber.png", outdir=outdir)
+        ber_floor = 1e-12
+        ber_for_plot = [max(ber_floor, float(v)) for v in results["BER"]]
+        plot_curves(results["distance_m"], ber_for_plot, "BER",
+                    "BER vs Distance (log scale)", save=args.save, outname="ber.png",
+                    y_min=ber_floor, y_max=1.0, y_scale="log", outdir=outdir)
 
         if args.save:
             csvp, jsonp = _save_csv_json(outdir, results)
