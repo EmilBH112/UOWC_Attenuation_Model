@@ -36,30 +36,12 @@ def run_sim(config: SimulationConfig) -> Dict[str, List[float]]:
                 "gg_alpha": turb.gg_alpha, "gg_beta": turb.gg_beta, "gg_nu": turb.gg_nu,
                 "wb_k": turb.wb_k, "wb_lambda": turb.wb_lambda
             }, r)
-
-            if config.tx_type.lower() == "led":
-                beam_axis_deg = tx.led_divergence_deg / 2.0
-                Pr = received_power_led(
-                    Pt_W=tx.power_W, eta_t=tx.eta_t, eta_r=rx.eta_r,
-                    c_m_inv=water.alpha_m_inv + water.beta_m_inv, d_m=d,
-                    theta_emit_deg=tx.led_divergence_deg, theta_half_deg=tx.led_theta_half_deg,
-                    g_tx=tx.g_tx, n_lens=rx.n_lens, fov_deg=rx.fov_deg, phi_deg=0.0,
-                    A_pd_m2=rx.area_m2, Fturb=Ft
-                )
-            else:
-                beam_axis_deg = tx.ld_divergence_deg / 2.0
-                Pr = received_power_ld(
-                    Pt_W=tx.power_W, eta_t=tx.eta_t, eta_r=rx.eta_r,
-                    c_m_inv=water.alpha_m_inv + water.beta_m_inv, d_m=d,
-                    divergence_full_deg=tx.ld_divergence_deg, g_tx=tx.g_tx,
-                    n_lens=rx.n_lens, fov_deg=rx.fov_deg, phi_deg=0.0,
-                    A_pd_m2=rx.area_m2, Fturb=Ft
-                )
-
+            Fpipe = 1.0
             if config.pipe_tir.enabled:
                 incidence_axis_deg = config.pipe_tir.incidence_axis_deg
-                tir_beam_axis = beam_axis_deg if incidence_axis_deg is None else incidence_axis_deg
-                pipe_gain = pipe_tir_guiding_gain(
+                tir_beam_axis = (tx.led_divergence_deg / 2.0) if config.tx_type.lower() == "led" else (tx.ld_divergence_deg / 2.0)
+                tir_beam_axis = tir_beam_axis if incidence_axis_deg is None else incidence_axis_deg
+                Fpipe = pipe_tir_guiding_gain(
                     d_m=d,
                     beam_axis_deg=tir_beam_axis,
                     radius_m=config.pipe_tir.radius_m,
@@ -69,7 +51,23 @@ def run_sim(config: SimulationConfig) -> Dict[str, List[float]]:
                     coupling_efficiency=config.pipe_tir.coupling_efficiency,
                     max_guiding_gain=config.pipe_tir.max_guiding_gain,
                 )
-                Pr *= pipe_gain
+
+            if config.tx_type.lower() == "led":
+                Pr = received_power_led(
+                    Pt_W=tx.power_W, eta_t=tx.eta_t, eta_r=rx.eta_r,
+                    c_m_inv=water.alpha_m_inv + water.beta_m_inv, d_m=d,
+                    theta_emit_deg=tx.led_divergence_deg, theta_half_deg=tx.led_theta_half_deg,
+                    g_tx=tx.g_tx, n_lens=rx.n_lens, fov_deg=rx.fov_deg, phi_deg=0.0,
+                    A_pd_m2=rx.area_m2, Fturb=Ft, Fpipe=Fpipe
+                )
+            else:
+                Pr = received_power_ld(
+                    Pt_W=tx.power_W, eta_t=tx.eta_t, eta_r=rx.eta_r,
+                    c_m_inv=water.alpha_m_inv + water.beta_m_inv, d_m=d,
+                    divergence_full_deg=tx.ld_divergence_deg, g_tx=tx.g_tx,
+                    n_lens=rx.n_lens, fov_deg=rx.fov_deg, phi_deg=0.0,
+                    A_pd_m2=rx.area_m2, Fturb=Ft, Fpipe=Fpipe
+                )
             acc_Pr += Pr
         Pr_mean = acc_Pr / float(max(1, g.mc_realizations))
 

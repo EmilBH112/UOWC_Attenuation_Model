@@ -5,7 +5,7 @@ from .optics import lambertian_order, Pi_indicator, cpc_gain
 def received_power_led(Pt_W: float, eta_t: float, eta_r: float, c_m_inv: float, d_m: float,
                        theta_emit_deg: float, theta_half_deg: float,
                        g_tx: float, n_lens: float, fov_deg: float, phi_deg: float,
-                       A_pd_m2: float, Fturb: float) -> float:
+                       A_pd_m2: float, Fturb: float, Fpipe: float = 1.0) -> float:
     # Eq. (16) LED-PS received power with alignment assumption; TS(phi)=1
     if d_m <= 0:
         return 0.0
@@ -19,11 +19,11 @@ def received_power_led(Pt_W: float, eta_t: float, eta_r: float, c_m_inv: float, 
     denom = 2.0 * math.pi * (d_m ** 2) * (1.0 - math.cos(math.radians(max(1e-9, theta_emit_deg))))
     geom = (A_pd_m2 * math.cos(math.radians(phi_deg))) / max(1e-30, denom)
     return (Pt_W * eta_t * eta_r * math.exp(-c_m_inv * d_m) * lambert *
-            GTXPO * GRXCO * TS * Fturb * geom * PiFOV)
+            GTXPO * GRXCO * TS * Fturb * Fpipe * geom * PiFOV)
 
 def received_power_ld(Pt_W: float, eta_t: float, eta_r: float, c_m_inv: float, d_m: float,
                       divergence_full_deg: float, g_tx: float, n_lens: float, fov_deg: float, phi_deg: float,
-                      A_pd_m2: float, Fturb: float) -> float:
+                      A_pd_m2: float, Fturb: float, Fpipe: float = 1.0) -> float:
     # Eq. (22) LD-PS received power with alignment; TS(phi)=1
     if d_m <= 0:
         return 0.0
@@ -35,4 +35,4 @@ def received_power_ld(Pt_W: float, eta_t: float, eta_r: float, c_m_inv: float, d
     denom = math.pi * (d_m ** 2) * (math.tan(theta) ** 2)
     geom = (A_pd_m2 * math.cos(math.radians(phi_deg))) / max(1e-30, denom)
     return (Pt_W * eta_t * eta_r * math.exp(-c_m_inv * d_m) *
-            GTXPO * GRXCO * TS * Fturb * geom * PiFOV)
+            GTXPO * GRXCO * TS * Fturb * Fpipe * geom * PiFOV)
