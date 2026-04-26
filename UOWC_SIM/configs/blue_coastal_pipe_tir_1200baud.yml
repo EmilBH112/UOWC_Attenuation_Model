@@ -1,9 +1,9 @@
 # Blue LED in coastal water with glossy-pipe guiding and 1200 baud receiver bandwidth
-# Target: ~9.6 mV around 1.2 m in the simulated PSoC voltage output.
+# Target: 8 mV detection threshold with signal right at threshold around 1.0 m.
 tx_type: led
 transmitter:
   eta_t: 0.9
-  power_W: 0.343
+  power_W: 0.2175
   wavelength_nm: 475.0
   led_theta_half_deg: 57.5
   led_divergence_deg: 57.5
@@ -20,7 +20,7 @@ receiver:
   Idark_A: 1.0e-10
   bandwidth_Hz: 1200.0
   tia_gain: 8500.0
-  baseline_offset_V: 0.0
+  baseline_offset_V: 0.007732
   comparator_low_V: 0.0
   comparator_high_V: 3.3
   psoc_logic_high_threshold_V: 1.65
@@ -48,8 +48,8 @@ pipe_tir:
   coupling_efficiency: 0.9
   max_guiding_gain: 100.0
 grid:
-  d_min_m: 1.2
-  d_max_m: 1.2
+  d_min_m: 1.0
+  d_max_m: 1.0
   d_step_m: 1.0
   mc_realizations: 1
   seed: 12345
