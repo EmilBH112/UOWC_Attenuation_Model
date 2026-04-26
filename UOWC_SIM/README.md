@@ -40,8 +40,27 @@ python -m UOWC_SIM.uowc_sim.cli run --preset clear_ocean --tx ld --turb gengamma
 # Produce summary tables and save plots
 python -m UOWC_SIM.uowc_sim.cli run --preset turbid_harbor --tx ld --turb weibull --wb-k 0.7 --wb-lambda 1.0 --save
 
-# Blue LED in coastal water with glossy-pipe TIR enabled (1200 baud profile, ~9.6 mV near 1.2 m)
-python -m UOWC_SIM.uowc_sim.cli run --config UOWC_SIM/configs/blue_coastal_pipe_tir_1200baud.yml
+# Blue LED in coastal water with glossy-pipe TIR enabled using CLI options
+python -m UOWC_SIM.uowc_sim.cli run --led blue --preset coastal_ocean --pipe-tir --pipe-radius-m 0.012 --pipe-wall-reflectivity 0.985 --pipe-water-n 1.343 --pipe-wall-n 1.490 --pipe-coupling-efficiency 0.82 --pipe-max-gain 35 --baud 1200 --dmin 0.2 --dmax 5 --step 0.2
+```
+
+## Pipe Example
+
+Use the glossy pipe model directly from CLI flags (like the other run options) instead of only via a YAML file:
+
+```bash
+python -m UOWC_SIM.uowc_sim.cli run \
+  --led blue \
+  --preset coastal_ocean \
+  --pipe-tir \
+  --pipe-radius-m 0.012 \
+  --pipe-wall-reflectivity 0.985 \
+  --pipe-water-n 1.343 \
+  --pipe-wall-n 1.490 \
+  --pipe-coupling-efficiency 0.82 \
+  --pipe-max-gain 35 \
+  --baud 1200 \
+  --dmin 0.2 --dmax 5 --step 0.2
 ```
 
 Outputs (plots + CSV/JSON) are saved under `outputs/<timestamp>/` when `--save` is used.
