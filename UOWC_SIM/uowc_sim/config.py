@@ -1,5 +1,6 @@
 
 from dataclasses import dataclass, asdict, field
+from pathlib import Path
 from typing import Optional
 import yaml
 
@@ -87,7 +88,18 @@ class SimulationConfig:
 
     @staticmethod
     def from_yaml(path: str) -> "SimulationConfig":
-        with open(path, "r", encoding="utf-8") as f:
+        cfg_path = Path(path)
+        if not cfg_path.exists():
+            module_root = Path(__file__).resolve().parents[1]
+            project_root_candidate = module_root.parent
+            path_options = [
+                module_root / path,
+                project_root_candidate / path,
+                module_root / "configs" / cfg_path.name,
+                project_root_candidate / "UOWC_SIM" / "configs" / cfg_path.name,
+            ]
+            cfg_path = next((p for p in path_options if p.exists()), cfg_path)
+        with open(cfg_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
         def ld(cls, src, key, defaults):
             d = src.get(key, {}) if src else {}
